@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Assignment 8</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+    </head>
+
+   <body>
+
+	<canvas id="renderCanvas"></canvas>
+
+	<script>
+        const canvas = document.getElementById("renderCanvas"); 
+        const engine = new BABYLON.Engine(canvas, true, {stencil: true}); 
+
+        const createScene = function () {
+
+            const scene = new BABYLON.Scene(engine);
+
+            //ArcRotateCamera
+            const camera = new BABYLON.ArcRotateCamera("arc-rotate-camera", Math.PI, Math.PI/3, 20, new BABYLON.Vector3(1,0.5,0));
+            camera.setTarget(BABYLON.Vector3.Zero());
+            camera.attachControl(canvas, true);
+
+            //Directional Light
+            const directLight = new BABYLON.DirectionalLight("directional-light", new BABYLON.Vector3(.5,-10,.5));
+            directLight.intensity = 0.8;
+            directLight.position.y = 5;
+                
+            //Hemispheric Light
+            const hemiLight = new BABYLON.HemisphericLight("hemi-light", new BABYLON.Vector3(0,1,0));
+            hemiLight.intensity = 0.8;
+            scene.clearColor = new BABYLON.Color3(0.2,0.4,0.6);
+            hemiLight.diffuse = new BABYLON.Color3(0.2,0.4,0.6);
+
+            //Sphere
+            const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 20}, scene);
+            sphere.position.y = 1;
+            sphere.position.x = 0;
+            sphere.scaling.y = 1; 
+            sphere.material = new BABYLON.StandardMaterial('sphere');
+            sphere.material.diffuseColor = new BABYLON.Color3(0,0,1);
+            let sphere_vx = 0.1;
+            let sphere_vy = -0.1;
+
+            //Ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 12, height: 12}, scene);
+            ground.position.y = -1;
+            ground.material = new BABYLON.StandardMaterial('groundColor');
+            ground.material.diffuseTexture = new BABYLON.Texture("wooden.jpg");
+            ground.material.specularTexture = new BABYLON.Texture("wooden.jpg");
+
+            //Box
+            const smallBox = new BABYLON.MeshBuilder.CreateBox("small-box", {width:1, height:1, depth:2});
+            smallBox.position.x = -5;
+            smallBox.position.y = -0.5;
+            smallBox.position.z = 0;
+            smallBox.material = new BABYLON.StandardMaterial('small-box');
+            smallBox.material.diffuseColor = new BABYLON.Color3(1,0.5,0);
+            smallBox.material.diffuseTexture = new BABYLON.Texture("checks.jpg");
+            smallBox.material.specularTexture = new BABYLON.Texture("checks.jpg");
+            let smallBox_vx = 0;
+            let smallBox_vz = 0;
+
+            //Cylinder 1
+            const cyclinder = new BABYLON.MeshBuilder.CreateCylinder("cyclinder", {height:1, diameter:1, tesselation:5});
+            cyclinder.position.y = -0.5;
+            cyclinder.position.x = 5;
+            cyclinder.position.z = -4.5;
+            cyclinder.material = new BABYLON.StandardMaterial('cyclinder');
+            cyclinder.material.diffuseColor = new BABYLON.Color3(.3,1,5);
+
+            //Cyclinder 2 - Clone
+            const cyclinder2 = cyclinder.clone("cyclinder2");
+            cyclinder2.position.x = 5;
+            cyclinder2.position.y = -0.5;
+            cyclinder2.position.z = 4.5;
+            cyclinder2.material = new BABYLON.StandardMaterial('cyclinder2');
+            cyclinder2.material.diffuseColor = new BABYLON.Color3(.3,1,5);
+
+            sphere.computeWorldMatrix(true);
+            ground.computeWorldMatrix(true);
+            cyclinder.computeWorldMatrix(true);
+            cyclinder2.computeWorldMatrix(true);
+            smallBox.computeWorldMatrix(true);
+      
+
+            //Highlight/Glow Effect
+            let highlight = new BABYLON.HighlightLayer("hightlight", scene);
+            highlight.addMesh(sphere, BABYLON.Color3.Blue());
+            highlight.addMesh(smallBox, BABYLON.Color3.Purple());
+            highlight.addMesh(cyclinder, BABYLON.Color3.Yellow());
+            highlight.addMesh(cyclinder2, BABYLON.Color3.Yellow());
+
+            //Physics Simulation - Bonus Task
+            scene.enablePhysics();
+            smallBox.physicsImpostor = new BABYLON.PhysicsImpostor(smallBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 5, restitution: 0.9 }, scene);
+            ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+
+            smallBox.position.y = 5;
+
+            let torus_vx = 0;
+            let torus_vz = 0;
+
+            //Key Frame Animations - For Both Cylinders x position & for the Spheres y position
+            let frameRate = 30; 
+            let animationLength = 8; 
+
+            //Cylinder 1 - x position
+            let cylinderXAnimation = new BABYLON.Animation("cyclinder x animation", "position.x", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_LOOP);
+
+            let cylinderXKeyFrames = [
+                {   
+                    frame :0,
+                    value: -5
+                },
+
+                {
+                    frame : animationLength * frameRate/2, 
+                    value : 5
+                },
+
+                {
+                    frame:animationLength * frameRate ,
+                    value: -5
+                }
+            ];
+
+            cylinderXAnimation.setKeys(cylinderXKeyFrames);
+
+            //Cylinder 2 - x position
+            let cylinder2XAnimation = new BABYLON.Animation("cyclinder2 x animation", "position.x", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_LOOP);
+
+            let cylinder2XKeyFrames = [
+                {   
+                    frame :0,
+                    value: -5
+                },
+
+                {
+                    frame : animationLength * frameRate/2, 
+                    value : 5
+                },
+
+                {
+                    frame:animationLength * frameRate ,
+                    value: -5
+                }
+            ];
+
+            cylinder2XAnimation.setKeys(cylinder2XKeyFrames);
+
+            //Sphere - y position
+            let sphereYAnimation = new BABYLON.Animation("sphere y animation", "position.y", frameRate, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_LOOP);
+
+            let sphereYKeyFrames = [
+
+                {   
+                    frame:0,
+                    value: 0.7
+                },
+                
+                {
+                    frame: animationLength * frameRate/2,
+                    value: 5
+                },
+
+                {
+                    frame: animationLength * frameRate,
+                    value: -0.10
+                }
+
+            ];
+
+        sphereYAnimation.setKeys(sphereYKeyFrames);
+
+        scene.beginDirectAnimation(cyclinder,[cylinderXAnimation], 0, animationLength * frameRate, true);
+        scene.beginDirectAnimation(sphere, [sphereYAnimation], 0, animationLength * frameRate, true);
+        scene.beginDirectAnimation(cyclinder2,[cylinder2XAnimation], 0, animationLength * frameRate, true);
+
+        //Keyboard Interaction - Using Actions
+        scene.actionManager = new BABYLON.ActionManager(scene);
+            scene.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+        
+                    BABYLON.ActionManager.OnKeyDownTrigger,
+                  
+                    function(keyInfo){
+                        let key = keyInfo.sourceEvent.key;
+     
+                        // a for left
+                        if(key == "a"){
+                            smallBox_vz = 0.20;
+                            smallBox_vx = 0;
+                        }
+
+                        // d for right
+                        else if(key == "d"){
+                            smallBox_vz = -0.20;
+                            smallBox_vx = 0;
+                        }
+
+                        // s for bottom/down
+                        else if(key == "s"){
+                            smallBox_vx = -0.20;
+                            smallBox_vz = 0;
+                        }
+
+                        // w for top/up
+                        else if(key == "w"){
+                            smallBox_vx = 0.20;
+                            smallBox_vz = 0;
+                        }
+                    }
+                )
+            )
+                   
+            scene.registerBeforeRender(function(){
+
+                smallBox.position.x += smallBox_vx;
+                smallBox.position.z += smallBox_vz;
+
+                smallBox_vz *= 0.70;
+                smallBox_vx *= 0.70;
+
+                //Collision Detections
+                if(sphere.intersectsMesh(ground, true)){
+                    sphere.material = new BABYLON.StandardMaterial("sphere");
+                    sphere.material.diffuseColor = new BABYLON.Color3(1,0,0);
+                    highlight.addMesh(sphere, BABYLON.Color3.Red());
+                }
+
+                if(smallBox.intersectsMesh(cyclinder, true)){
+                    cyclinder.material = new BABYLON.StandardMaterial('cyclinder');
+                    cyclinder.material.diffuseColor = new BABYLON.Color3(.2,.4,0);                   
+                    smallBox.material.alpha = 0.5;
+                }else{
+                    cyclinder.material = new BABYLON.StandardMaterial('cyclinder');
+                    cyclinder.material.diffuseColor = new BABYLON.Color3(1,1,0);
+                }
+
+                if(smallBox.intersectsMesh(cyclinder2, true)){
+
+                    cyclinder2.material = new BABYLON.StandardMaterial('cyclinder2');
+                    cyclinder2.material.diffuseColor = new BABYLON.Color3(.2,.4,0);
+                    smallBox.material.alpha = 1;
+                }else{
+                    cyclinder2.material = new BABYLON.StandardMaterial('cyclinder2');
+                    cyclinder2.material.diffuseColor = new BABYLON.Color3(1,1,0);
+                }
+
+                if(sphere.intersectsMesh(smallBox, true)){
+                    let torus = new BABYLON.MeshBuilder.CreateTorus("torus");
+                    torus.material = new BABYLON.StandardMaterial('torus');
+                    torus.material.diffuseTexture = new BABYLON.Texture("donut3.jpg");
+                    
+                    //Physics Simulation - Bonus Task
+                    torus.physicsImpostor = new BABYLON.PhysicsImpostor(torus, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0.5}, scene)
+                    torus.position.y = 10;
+
+                    torus_vz *= 0.20;
+                    torus_vx *= 0.20;
+
+                    torus.position.x -= torus_vx;
+                    torus.position.z -= torus_vz;
+                    smallBox.position.x = -5;
+                    smallBox.position.y = -0.5;
+                    smallBox.position.z = 0;
+
+                }
+        }); 
+
+        return scene;
+    };
+
+        const scene = createScene(); 
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+	</script>
+
+   </body>
+</html>
