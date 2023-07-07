@@ -1,4 +1,4 @@
-# Multimedia-and-Animation
+# HTML5 Canvas Animation
 An interactive animation created using HTML5 canvas and Babylon.js
 
 Instructions:
