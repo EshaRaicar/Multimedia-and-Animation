@@ -1,11 +1,12 @@
 # HTML5 Canvas Animation
-An interactive animation created using HTML5 canvas and Babylon.js
+- This is a basic interactive animation which is created using HTML5 canvas and a JavaScript framework (Babylon.js).
+- This project portrays some actions based on the users interactions
+  - Move an object(cube) across the given area using the "W , S , A , D" keys on the keyboard
+  - Control the visbility of the given object - make it visible or invisible upon interaction with the two cylinder objects on the sides
+  - Upon collision with the floating sphere - the cube is placed at it's previous position, while also dropping a donut from above
+      
+- You can view all images of the project under the "DemoImages" folder provided. 
 
-Instructions:
-- Download the folder "Project" which is uploaded on GitHub
-- Please ensure you have Visual Studio Code installed on your device already
-- In Visual Studio Code, you will require an extension called "Live Server" to view the project as it's supposed to look
-- Once installed, open the "Project" folder on Visual Studio Code and select/open the "index.html" file on VS code
-- Click on "Go Live" which will appear on the bottom right, this will redirect you to the HTML page of this project
-
+A Demo Image - upon startup 
+![beginning](https://github.com/EshaRaicar/Multimedia-and-Animation/assets/107826151/c20e03d3-8354-4875-93a1-e0ef5f124e04)
 
